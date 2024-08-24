@@ -1,0 +1,14 @@
+MODULE Comments;
+REQUIRE Remote, Utils, Authentication, Time;
+
+FORM  viewComments 'Комментарии'
+    OBJECTS r = Remote
+    OBJECTS c = Comments
+    PROPERTIES (c) comments, text, userDate, userName, checked, DELETE GRID
+    FILTERS comments(c)  IF checked(c) != TRUE //почему оно не работает ни != TRUE ни = NULL???????????
+;
+NAVIGATOR {
+    move { 
+        NEW FORM viewComments;
+    }
+}
