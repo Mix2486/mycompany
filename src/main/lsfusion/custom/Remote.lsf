@@ -1,9 +1,9 @@
 MODULE Remote;
-REQUIRE Staffers, Utils, Authentication, Time;
+
+REQUIRE Utils, Authentication, Time;
 
 CLASS Remote 'Инженеры';
 CLASS Comments 'Комментарии';
-
 
 specialist_id 'порядковый номер' = DATA INTEGER (Remote);
 name 'ФИО' =  DATA STRING[135] (Remote);
@@ -212,7 +212,7 @@ DESIGN viewEngineers {
 
 //4. создаем пункт меню
 NAVIGATOR {
-   move { // Новый пункт горизонтального меню
+    NEW FOLDER move 'Сотрудники' WINDOW toolbar FIRST { // Новый пункт горизонтального меню
         NEW FORM viewEngineers; // В качестве подпункта меню Заголовок формы
     }
 }
