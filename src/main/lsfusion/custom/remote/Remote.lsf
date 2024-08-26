@@ -3,7 +3,6 @@ MODULE Remote;
 REQUIRE Utils, Authentication, Time;
 
 CLASS Remote 'Инженеры';
-CLASS Comments 'Комментарии';
 
 specialist_id 'порядковый номер' = DATA INTEGER (Remote);
 name 'ФИО' =  DATA STRING[135] (Remote);
@@ -32,23 +31,6 @@ advance_steel 'Advance_Steel' = DATA BOOLEAN (Remote);
 autoCAD 'AutoCAD' = DATA BOOLEAN (Remote);
 available 'Готов к найму?' =  DATA BOOLEAN (Remote);
 
-
-
-comments 'Запись комментария' = DATA Remote (Comments) NONULL DELETE;
-index 'Номер комментария' (Comments c) = 
-    PARTITION SUM 1 IF c IS Comments
-    ORDER c BY comments(c);
-
-
-text 'Комментарий' = DATA STRING (Comments) NONULL;
-userDate 'Дата ввода' =  DATA DATE (Comments);
-userName 'Пользователь' = DATA STRING[80] (Comments);
-checked 'Одобрено' = DATA BOOLEAN (Comments);
-
-WHEN SET(Comments  c IS Comments ) AND NOT userDate(c) DO userDate(c) <- currentDate();
-WHEN SET(Comments  c IS Comments ) AND NOT userName(c) DO userName(c) <- STRING[50](name(currentUser()));
-
-
 FORM editEngineers 'Инженер'
     OBJECTS r = Remote 
     PROPERTIES (r) PANEL name, project_doc, comments, available,
@@ -58,14 +40,10 @@ FORM editEngineers 'Инженер'
         advance_steel, autoCAD,   experience,
         additional_information, portfolio, linkedIn, individual_entrepreneur
     
-    OBJECTS c = Comments
-    PROPERTIES (c) index, text, userDate, userName, checked READONLY, NEW, DELETE GRID
-    FILTERS comments(c) = r
-    
     EDIT Remote OBJECT r
 ;
 
-FORM  viewEngineers 'Аутсорс' // название формы и заголовок
+FORM viewEngineers 'Аутсорс' // название формы и заголовок
 
     OBJECTS r = Remote // объект формы
     PROPERTIES (r) READONLY name, project_doc, comments, portfolio, available,
@@ -76,78 +54,8 @@ FORM  viewEngineers 'Аутсорс' // название формы и заго�
         additional_information, linkedIn, individual_entrepreneur
 
     PROPERTIES (r) NEWSESSION NEW, EDIT, DELETE // операторы работы с объектами
-    
-    OBJECTS c = Comments
-    PROPERTIES (c) READONLY index, text, userDate, userName
-    FILTERS comments(c) = r
 ;
-importXlsx 'Импортировать сотрудников из XLS' (Remote o)  {
-    INPUT f = EXCELFILE DO {
 
-        LOCAL specialist_id  = INTEGER (INTEGER);
-        LOCAL name  =  STRING[135] (INTEGER);
-        LOCAL birth_date = DATE (INTEGER);
-        LOCAL company  =  STRING[155] (INTEGER);
-        LOCAL address  =  STRING[155] (INTEGER);
-        LOCAL project_doc  =  STRING[155] (INTEGER);
-        LOCAL phone  =   STRING[155] (INTEGER);
-        LOCAL phone_2  = STRING[155] (INTEGER);
-        LOCAL mail  =   STRING[155] (INTEGER);
-        LOCAL linkedIn  =  LINK (INTEGER);
-        LOCAL specialization =  STRING[155] (INTEGER);
-        LOCAL education  = STRING[1500] (INTEGER);
-        LOCAL certificates  =  STRING[1500] (INTEGER);
-        LOCAL individual_entrepreneur =   BOOLEAN (INTEGER);
-        LOCAL additional_information  = STRING[1500] (INTEGER);
-        LOCAL black_list  = BOOLEAN (INTEGER);
-        LOCAL comments =  TEXT (INTEGER);
-        LOCAL experience  =  DATE (INTEGER);
-        LOCAL revit  =   BOOLEAN (INTEGER);
-        LOCAL civil  =   BOOLEAN (INTEGER);
-        LOCAL tekla   =  BOOLEAN (INTEGER);
-        LOCAL advance_steel  =  BOOLEAN (INTEGER);
-        LOCAL autoCAD  =  BOOLEAN (INTEGER);
-        LOCAL available  =  BOOLEAN (INTEGER);
-
-        IMPORT XLS FROM f TO specialist_id = A, name = B, birth_date = C, company = D, address = E, project_doc = F, phone = G,
-                phone_2 = H, mail = I, linkedIn = J, specialization = K, education = L, certificates= M, individual_entrepreneur = N,
-                additional_information = O, black_list = P, comments = Q,
-                experience = R, revit = S, civil = T, tekla = U,
-                advance_steel = V, autoCAD = W, available = X
-
-        FOR imported(INTEGER i) NEW d = Remote DO {
-            specialist_id(d) <- specialist_id(i);
-            name(d) <- name(i);
-            birth_date(d) <- birth_date(i);
-            company(d) <- company(i);
-            address(d) <- address(i);
-            project_doc(d) <- project_doc(i);
-            phone(d) <- phone(i);
-            phone_2(d) <- phone_2(i);
-            mail(d) <- mail(i);
-            linkedIn(d) <- linkedIn(i);
-            specialization(d) <- specialization(i);
-            education(d) <- education(i);
-            certificates(d) <- certificates(i);
-            individual_entrepreneur(d) <- individual_entrepreneur(i);
-            additional_information(d) <- additional_information(i);
-            black_list(d) <- black_list(i);
-            comments(d) <- comments(i);
-            experience(d) <- experience(i);
-            revit(d) <- revit(i);
-            civil(d) <- civil(i);
-            tekla(d) <- tekla(i);
-            advance_steel(d) <- advance_steel(i);
-            autoCAD(d) <- autoCAD(i);
-            available(d) <- available(i);
-
-        }
-    }
-}
-
-//EXTEND FORM viewEngineers
-//  PROPERTIES(r) importXlsx
-//;
 DESIGN editEngineers {
     OBJECTS {
         NEW cntDoc {
@@ -193,14 +101,6 @@ DESIGN editEngineers {
             MOVE PROPERTY (black_list(r));
 
         }
-//        NEW comments{
-//            horizontal = FALSE ;
-//            caption = 'Комментарии';
-//            MOVE PROPERTY ;
-//            MOVE PROPERTY (text(c));
-//            MOVE PROPERTY (userDate(c));
-//            MOVE PROPERTY (userName(c));
-//        }
     }
 }
 
