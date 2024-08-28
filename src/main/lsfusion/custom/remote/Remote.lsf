@@ -1,0 +1,118 @@
+MODULE Remote;
+
+REQUIRE Utils, Authentication, Time;
+
+CLASS Remote 'Инженеры';
+
+specialist_id 'порядковый номер' = DATA INTEGER (Remote);
+name 'ФИО' =  DATA STRING[135] (Remote);
+birth_date 'дата рождения' = DATA DATE (Remote);
+company 'Компания' = DATA STRING[155] (Remote);
+address 'Адрес' =  DATA STRING[155] (Remote);
+project_doc 'Раздел проектной документации' = DATA STRING[155] (Remote);
+phone 'Телефон' =  DATA STRING[155] (Remote);
+phone_2 'Телефон 2' = DATA STRING[155] (Remote);
+mail 'mail' =  DATA STRING[155] (Remote);
+portfolio 'Портфолио' = DATA FILE (Remote);
+linkedIn 'linkedin' = DATA LINK (Remote);
+specialization 'Специализация' = DATA STRING[155] (Remote);
+education 'Образование' = DATA STRING[1500] (Remote);
+certificates 'Сертификаты' = DATA STRING[1500] (Remote);
+additional_information 'Дополнительная информация' = DATA STRING[1500] (Remote);
+comments 'Комментарии' =  DATA TEXT (Remote);
+experience 'Опыт' = DATA DATE (Remote);
+
+individual_entrepreneur 'Наличие ИП' =  DATA BOOLEAN (Remote);
+black_list 'В черном списке?' = DATA BOOLEAN (Remote);
+revit 'Revit' =  DATA BOOLEAN (Remote);
+civil 'Civil' =  DATA BOOLEAN (Remote);
+tekla 'Tekla'  = DATA BOOLEAN (Remote);
+advance_steel 'Advance_Steel' = DATA BOOLEAN (Remote);
+autoCAD 'AutoCAD' = DATA BOOLEAN (Remote);
+available 'Готов к найму?' =  DATA BOOLEAN (Remote);
+
+FORM editEngineers 'Инженер'
+    OBJECTS r = Remote 
+    PROPERTIES (r) PANEL name, project_doc, comments, available,
+        black_list,  phone, phone_2, mail, birth_date,
+        address, company, education, specialization,
+        certificates, revit, civil, tekla,
+        advance_steel, autoCAD,   experience,
+        additional_information, portfolio, linkedIn, individual_entrepreneur
+    
+    EDIT Remote OBJECT r
+;
+
+FORM viewEngineers 'Аутсорс' // название формы и заголовок
+
+    OBJECTS r = Remote // объект формы
+    PROPERTIES (r) READONLY name, project_doc, comments, portfolio, available,
+        black_list,  phone, phone_2, mail, birth_date,
+        address, company, education, specialization,
+        certificates, revit, civil, tekla,
+        advance_steel, autoCAD,   experience,
+        additional_information, linkedIn, individual_entrepreneur
+
+    PROPERTIES (r) NEWSESSION NEW, EDIT, DELETE // операторы работы с объектами
+;
+
+DESIGN editEngineers {
+    OBJECTS {
+        NEW cntDoc {
+            horizontal = FALSE ;
+            caption = 'Общие сведения';
+            MOVE PROPERTY (name(r));
+            MOVE PROPERTY (phone(r));
+            MOVE PROPERTY (phone_2(r));
+            MOVE PROPERTY (mail(r));
+            MOVE PROPERTY (birth_date(r));
+            MOVE PROPERTY (address(r));
+            MOVE PROPERTY (experience(r));
+            MOVE PROPERTY (education(r));
+            MOVE PROPERTY (black_list(r));
+            MOVE PROPERTY (available(r));
+        }
+        NEW cntRow1 {
+            horizontal = FALSE ;
+            caption = 'Описание';
+            MOVE PROPERTY (project_doc(r));
+            MOVE PROPERTY (specialization(r));
+            MOVE PROPERTY (certificates(r));
+            MOVE PROPERTY (comments(r));
+            MOVE PROPERTY (individual_entrepreneur(r));
+            MOVE PROPERTY (company(r));
+            MOVE PROPERTY (portfolio(r));
+        }
+        NEW cntRow2 {
+            horizontal = TRUE ;
+            caption = 'Навыки';
+            MOVE PROPERTY (revit(r));
+            MOVE PROPERTY (civil(r));
+            MOVE PROPERTY (tekla(r));
+            MOVE PROPERTY (advance_steel(r));
+            MOVE PROPERTY (autoCAD(r));
+        }
+        NEW cntRow3 {
+            horizontal = FALSE ;
+            caption = 'Дополнительно';
+            MOVE PROPERTY (additional_information(r));
+            MOVE PROPERTY (linkedIn(r));
+            MOVE PROPERTY (individual_entrepreneur(r));
+            MOVE PROPERTY (black_list(r));
+
+        }
+    }
+}
+
+DESIGN viewEngineers {
+    PROPERTY(phone(r)) {
+        pattern = '+375 (00) 000-00-00';
+    }
+}
+
+//4. создаем пункт меню
+NAVIGATOR {
+    NEW FOLDER move 'Сотрудники' WINDOW toolbar FIRST { // Новый пункт горизонтального меню
+        NEW FORM viewEngineers; // В качестве подпункта меню Заголовок формы
+    }
+}

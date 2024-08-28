@@ -1,0 +1,46 @@
+MODULE RemoteComments;
+
+REQUIRE Remote, Utils, Authentication, Time;
+
+NAMESPACE Remote;
+
+CLASS Comments 'Комментарии';
+
+comments 'Запись комментария' = DATA Remote (Comments) NONULL DELETE;
+index 'Номер комментария' (Comments c) =
+    PARTITION SUM 1 IF c IS Comments
+        ORDER c BY comments(c);
+
+
+text 'Комментарий' = DATA STRING (Comments) NONULL;
+userDate 'Дата ввода' =  DATA DATE (Comments);
+userName 'Пользователь' = DATA STRING[80] (Comments);
+checked 'Одобрено' = DATA BOOLEAN (Comments);
+
+WHEN SET(Comments  c IS Comments ) AND NOT userDate(c) DO userDate(c) <- currentDate();
+WHEN SET(Comments  c IS Comments ) AND NOT userName(c) DO userName(c) <- STRING[50](name(currentUser()));
+
+EXTEND FORM editEngineers
+    OBJECTS c = Comments
+    PROPERTIES (c) index, text, userDate, userName, checked READONLY, NEW, DELETE GRID
+    FILTERS comments(c) = r
+;
+
+EXTEND FORM viewEngineers
+    OBJECTS c = Comments
+    PROPERTIES (c) READONLY index, text, userDate, userName
+    FILTERS comments(c) = r
+;
+
+FORM viewComments 'Комментарии'
+    OBJECTS r = Remote
+    OBJECTS c = Comments
+    PROPERTIES (c) comments, text, userDate, userName, checked, DELETE GRID
+    FILTERS comments(c)  IF checked(c) != TRUE //почему оно не работает ни != TRUE ни = NULL???????????
+;
+
+NAVIGATOR {
+    move { 
+        NEW FORM viewComments;
+    }
+}

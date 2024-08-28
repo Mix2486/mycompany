@@ -1,0 +1,73 @@
+MODULE RemoteImport;
+
+REQUIRE Remote;
+
+NAMESPACE Remote;
+
+importXlsx 'Импортировать сотрудников из XLS' (Remote o)  {
+    INPUT f = EXCELFILE DO {
+
+        LOCAL specialist_id  = INTEGER (INTEGER);
+        LOCAL name  =  STRING[135] (INTEGER);
+        LOCAL birth_date = DATE (INTEGER);
+        LOCAL company  =  STRING[155] (INTEGER);
+        LOCAL address  =  STRING[155] (INTEGER);
+        LOCAL project_doc  =  STRING[155] (INTEGER);
+        LOCAL phone  =   STRING[155] (INTEGER);
+        LOCAL phone_2  = STRING[155] (INTEGER);
+        LOCAL mail  =   STRING[155] (INTEGER);
+        LOCAL linkedIn  =  LINK (INTEGER);
+        LOCAL specialization =  STRING[155] (INTEGER);
+        LOCAL education  = STRING[1500] (INTEGER);
+        LOCAL certificates  =  STRING[1500] (INTEGER);
+        LOCAL individual_entrepreneur =   BOOLEAN (INTEGER);
+        LOCAL additional_information  = STRING[1500] (INTEGER);
+        LOCAL black_list  = BOOLEAN (INTEGER);
+        LOCAL comments =  TEXT (INTEGER);
+        LOCAL experience  =  DATE (INTEGER);
+        LOCAL revit  =   BOOLEAN (INTEGER);
+        LOCAL civil  =   BOOLEAN (INTEGER);
+        LOCAL tekla   =  BOOLEAN (INTEGER);
+        LOCAL advance_steel  =  BOOLEAN (INTEGER);
+        LOCAL autoCAD  =  BOOLEAN (INTEGER);
+        LOCAL available  =  BOOLEAN (INTEGER);
+
+        IMPORT XLS FROM f TO specialist_id = A, name = B, birth_date = C, company = D, address = E, project_doc = F, phone = G,
+                phone_2 = H, mail = I, linkedIn = J, specialization = K, education = L, certificates= M, individual_entrepreneur = N,
+                additional_information = O, black_list = P, comments = Q,
+                experience = R, revit = S, civil = T, tekla = U,
+                advance_steel = V, autoCAD = W, available = X
+
+        FOR imported(INTEGER i) NEW d = Remote DO {
+            specialist_id(d) <- specialist_id(i);
+            name(d) <- name(i);
+            birth_date(d) <- birth_date(i);
+            company(d) <- company(i);
+            address(d) <- address(i);
+            project_doc(d) <- project_doc(i);
+            phone(d) <- phone(i);
+            phone_2(d) <- phone_2(i);
+            mail(d) <- mail(i);
+            linkedIn(d) <- linkedIn(i);
+            specialization(d) <- specialization(i);
+            education(d) <- education(i);
+            certificates(d) <- certificates(i);
+            individual_entrepreneur(d) <- individual_entrepreneur(i);
+            additional_information(d) <- additional_information(i);
+            black_list(d) <- black_list(i);
+            comments(d) <- comments(i);
+            experience(d) <- experience(i);
+            revit(d) <- revit(i);
+            civil(d) <- civil(i);
+            tekla(d) <- tekla(i);
+            advance_steel(d) <- advance_steel(i);
+            autoCAD(d) <- autoCAD(i);
+            available(d) <- available(i);
+
+        }
+    }
+}
+
+//EXTEND FORM viewEngineers
+//  PROPERTIES(r) importXlsx
+//;
