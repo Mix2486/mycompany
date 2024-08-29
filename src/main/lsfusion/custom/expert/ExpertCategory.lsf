@@ -43,7 +43,7 @@ CLASS Category 'Раздел проектной документации';
 TABLE category (Category);
 
 name '{master.data.name}' = DATA ISTRING[100] (Category) CHARWIDTH 10;
-category (ISTRING[100] name) = GROUP AGGR Category c BY name(g);
+category (ISTRING[100] name) = GROUP AGGR Category c BY name(c);
 
 group = DATA CategoryGroup (Category) INDEXED;
 nameGroup 'Группа' (Category c) = name(group(c));
