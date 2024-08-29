@@ -171,7 +171,8 @@ DESIGN expert {
 // list
 FORM experts 'Специалисты'
     OBJECTS e = Expert BACKGROUND RGB(212,212,255) IF toApprove(e) 
-    PROPERTIES(e) READONLY id, dateTimeLastRev, nameUserLastRev
+    PROPERTIES(e) READONLY id
+    PROPERTIES(e) READONLY LAST dateTimeLastRev, nameUserLastRev
     
     PROPERTIES(e) NEWSESSION NEW, EDIT, DELETE 
 

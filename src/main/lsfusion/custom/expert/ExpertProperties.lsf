@@ -5,10 +5,10 @@ REQUIRE Expert, Icon;
 NAMESPACE Expert;
 
 // properties
-META defineRevProperty(prop, capt, type, container, width)
-    prop capt = DATA type (ExpertRev) CHARWIDTH width;
-
-    prop capt (Expert e) = prop(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+META defineRevProperty(prop, capt, type, container, width, grp)
+    prop capt = DATA type (ExpertRev) CHARWIDTH width IN grp;
+    
+    prop capt (Expert e) = prop(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN grp;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (prop(r) OR prop(prevRev(r))) AND NOT prop(r) = prop(prevRev(r))
@@ -30,10 +30,37 @@ META defineRevProperty(prop, capt, type, container, width)
     }
 END
 
-@defineRevProperty(name, 'ФИО', STRING[100], leftPane, 15){
-    name 'ФИО' = DATA STRING[100] (ExpertRev) CHARWIDTH 15;
+META defineRevProperty(prop, capt, type, container, width)
+    @defineRevProperty(prop, capt, type, container, width, base){
+    prop capt = DATA type (ExpertRev) CHARWIDTH width IN base;
+    
+    prop capt (Expert e) = prop(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
-    name 'ФИО' (Expert e) = name(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    EXTEND FORM expert
+        PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (prop(r) OR prop(prevRev(r))) AND NOT prop(r) = prop(prevRev(r))
+        READONLYIF readonly(r)
+        prop
+    ;
+
+    DESIGN expert {
+        container {
+            MOVE PROPERTY(prop(r));
+        }
+    }
+    EXTEND FORM experts
+        PROPERTIES(e) READONLY prop
+    ;
+
+    copy(ExpertRev from, ExpertRev to) +{
+        prop(to) <- prop(from);
+    }
+};
+END
+
+@defineRevProperty(name, 'ФИО', STRING[100], leftPane, 15, id){
+    name 'ФИО' = DATA STRING[100] (ExpertRev) CHARWIDTH 15 IN id;
+    
+    name 'ФИО' (Expert e) = name(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN id;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (name(r) OR name(prevRev(r))) AND NOT name(r) = name(prevRev(r))
@@ -65,9 +92,10 @@ DESIGN expert {
 }
 
 @defineRevProperty(company, 'Компания', STRING[200], contactInfo, 20){
-    company 'Компания' = DATA STRING[200] (ExpertRev) CHARWIDTH 20;
-
-    company 'Компания' (Expert e) = company(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(company, 'Компания', STRING[200], contactInfo, 20, base){
+    company 'Компания' = DATA STRING[200] (ExpertRev) CHARWIDTH 20 IN base;
+    
+    company 'Компания' (Expert e) = company(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (company(r) OR company(prevRev(r))) AND NOT company(r) = company(prevRev(r))
@@ -88,10 +116,12 @@ DESIGN expert {
         company(to) <- company(from);
     }
 };
+};
 @defineRevProperty(address, 'Адрес', STRING[200], contactInfo, 20){
-    address 'Адрес' = DATA STRING[200] (ExpertRev) CHARWIDTH 20;
-
-    address 'Адрес' (Expert e) = address(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(address, 'Адрес', STRING[200], contactInfo, 20, base){
+    address 'Адрес' = DATA STRING[200] (ExpertRev) CHARWIDTH 20 IN base;
+    
+    address 'Адрес' (Expert e) = address(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (address(r) OR address(prevRev(r))) AND NOT address(r) = address(prevRev(r))
@@ -112,11 +142,13 @@ DESIGN expert {
         address(to) <- address(from);
     }
 };
+};
 
 @defineRevProperty(phone, 'Телефон', STRING[20], contactInfo, 15){
-    phone 'Телефон' = DATA STRING[20] (ExpertRev) CHARWIDTH 15;
-
-    phone 'Телефон' (Expert e) = phone(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(phone, 'Телефон', STRING[20], contactInfo, 15, base){
+    phone 'Телефон' = DATA STRING[20] (ExpertRev) CHARWIDTH 15 IN base;
+    
+    phone 'Телефон' (Expert e) = phone(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (phone(r) OR phone(prevRev(r))) AND NOT phone(r) = phone(prevRev(r))
@@ -137,10 +169,12 @@ DESIGN expert {
         phone(to) <- phone(from);
     }
 };
+};
 @defineRevProperty(extraPhone, 'Телефон (доп.)', STRING[20], contactInfo, 15){
-    extraPhone 'Телефон (доп.)' = DATA STRING[20] (ExpertRev) CHARWIDTH 15;
-
-    extraPhone 'Телефон (доп.)' (Expert e) = extraPhone(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(extraPhone, 'Телефон (доп.)', STRING[20], contactInfo, 15, base){
+    extraPhone 'Телефон (доп.)' = DATA STRING[20] (ExpertRev) CHARWIDTH 15 IN base;
+    
+    extraPhone 'Телефон (доп.)' (Expert e) = extraPhone(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (extraPhone(r) OR extraPhone(prevRev(r))) AND NOT extraPhone(r) = extraPhone(prevRev(r))
@@ -161,6 +195,7 @@ DESIGN expert {
         extraPhone(to) <- extraPhone(from);
     }
 };
+};
 
 DESIGN expert {
     PROPERTY(phone(r)) {
@@ -176,9 +211,10 @@ DESIGN expert {
 }
 
 @defineRevProperty(mail, 'Почта', STRING[60], contactInfo, 15){
-    mail 'Почта' = DATA STRING[60] (ExpertRev) CHARWIDTH 15;
-
-    mail 'Почта' (Expert e) = mail(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(mail, 'Почта', STRING[60], contactInfo, 15, base){
+    mail 'Почта' = DATA STRING[60] (ExpertRev) CHARWIDTH 15 IN base;
+    
+    mail 'Почта' (Expert e) = mail(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (mail(r) OR mail(prevRev(r))) AND NOT mail(r) = mail(prevRev(r))
@@ -199,11 +235,13 @@ DESIGN expert {
         mail(to) <- mail(from);
     }
 };
+};
 
 @defineRevProperty(linkedIn, 'LinkedIn', LINK, contactInfo, 25){
-    linkedIn 'LinkedIn' = DATA LINK (ExpertRev) CHARWIDTH 25;
-
-    linkedIn 'LinkedIn' (Expert e) = linkedIn(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(linkedIn, 'LinkedIn', LINK, contactInfo, 25, base){
+    linkedIn 'LinkedIn' = DATA LINK (ExpertRev) CHARWIDTH 25 IN base;
+    
+    linkedIn 'LinkedIn' (Expert e) = linkedIn(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (linkedIn(r) OR linkedIn(prevRev(r))) AND NOT linkedIn(r) = linkedIn(prevRev(r))
@@ -224,6 +262,7 @@ DESIGN expert {
         linkedIn(to) <- linkedIn(from);
     }
 };
+};
 
 DESIGN expert {
     leftPane { 
@@ -233,9 +272,10 @@ DESIGN expert {
     }
 }
 @defineRevProperty(birthday, 'Дата рождения', DATE, extraInfo, 9){
-    birthday 'Дата рождения' = DATA DATE (ExpertRev) CHARWIDTH 9;
-
-    birthday 'Дата рождения' (Expert e) = birthday(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(birthday, 'Дата рождения', DATE, extraInfo, 9, base){
+    birthday 'Дата рождения' = DATA DATE (ExpertRev) CHARWIDTH 9 IN base;
+    
+    birthday 'Дата рождения' (Expert e) = birthday(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (birthday(r) OR birthday(prevRev(r))) AND NOT birthday(r) = birthday(prevRev(r))
@@ -256,10 +296,12 @@ DESIGN expert {
         birthday(to) <- birthday(from);
     }
 };
+};
 @defineRevProperty(experience, 'Опыт', DATE, extraInfo, 9){
-    experience 'Опыт' = DATA DATE (ExpertRev) CHARWIDTH 9;
-
-    experience 'Опыт' (Expert e) = experience(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(experience, 'Опыт', DATE, extraInfo, 9, base){
+    experience 'Опыт' = DATA DATE (ExpertRev) CHARWIDTH 9 IN base;
+    
+    experience 'Опыт' (Expert e) = experience(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (experience(r) OR experience(prevRev(r))) AND NOT experience(r) = experience(prevRev(r))
@@ -280,11 +322,13 @@ DESIGN expert {
         experience(to) <- experience(from);
     }
 };
+};
 
 @defineRevProperty(individualEntrepreneur, 'Наличие ИП', BOOLEAN, extraInfo, 4){
-    individualEntrepreneur 'Наличие ИП' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4;
-
-    individualEntrepreneur 'Наличие ИП' (Expert e) = individualEntrepreneur(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(individualEntrepreneur, 'Наличие ИП', BOOLEAN, extraInfo, 4, base){
+    individualEntrepreneur 'Наличие ИП' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4 IN base;
+    
+    individualEntrepreneur 'Наличие ИП' (Expert e) = individualEntrepreneur(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (individualEntrepreneur(r) OR individualEntrepreneur(prevRev(r))) AND NOT individualEntrepreneur(r) = individualEntrepreneur(prevRev(r))
@@ -305,10 +349,12 @@ DESIGN expert {
         individualEntrepreneur(to) <- individualEntrepreneur(from);
     }
 };
+};
 @defineRevProperty(blackList, 'В черном списке ?', BOOLEAN, extraInfo, 4){
-    blackList 'В черном списке ?' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4;
-
-    blackList 'В черном списке ?' (Expert e) = blackList(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(blackList, 'В черном списке ?', BOOLEAN, extraInfo, 4, base){
+    blackList 'В черном списке ?' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4 IN base;
+    
+    blackList 'В черном списке ?' (Expert e) = blackList(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (blackList(r) OR blackList(prevRev(r))) AND NOT blackList(r) = blackList(prevRev(r))
@@ -329,10 +375,12 @@ DESIGN expert {
         blackList(to) <- blackList(from);
     }
 };
+};
 @defineRevProperty(available, 'Готов к найму?', BOOLEAN, extraInfo, 4){
-    available 'Готов к найму?' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4;
-
-    available 'Готов к найму?' (Expert e) = available(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(available, 'Готов к найму?', BOOLEAN, extraInfo, 4, base){
+    available 'Готов к найму?' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4 IN base;
+    
+    available 'Готов к найму?' (Expert e) = available(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (available(r) OR available(prevRev(r))) AND NOT available(r) = available(prevRev(r))
@@ -353,11 +401,13 @@ DESIGN expert {
         available(to) <- available(from);
     }
 };
+};
 
 @defineRevProperty(specialization, 'Специализация', STRING[200], leftPane, 20){
-    specialization 'Специализация' = DATA STRING[200] (ExpertRev) CHARWIDTH 20;
-
-    specialization 'Специализация' (Expert e) = specialization(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(specialization, 'Специализация', STRING[200], leftPane, 20, base){
+    specialization 'Специализация' = DATA STRING[200] (ExpertRev) CHARWIDTH 20 IN base;
+    
+    specialization 'Специализация' (Expert e) = specialization(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (specialization(r) OR specialization(prevRev(r))) AND NOT specialization(r) = specialization(prevRev(r))
@@ -378,10 +428,12 @@ DESIGN expert {
         specialization(to) <- specialization(from);
     }
 };
+};
 @defineRevProperty(education, 'Образование', STRING[1500], leftPane, 20){
-    education 'Образование' = DATA STRING[1500] (ExpertRev) CHARWIDTH 20;
-
-    education 'Образование' (Expert e) = education(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(education, 'Образование', STRING[1500], leftPane, 20, base){
+    education 'Образование' = DATA STRING[1500] (ExpertRev) CHARWIDTH 20 IN base;
+    
+    education 'Образование' (Expert e) = education(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (education(r) OR education(prevRev(r))) AND NOT education(r) = education(prevRev(r))
@@ -402,10 +454,12 @@ DESIGN expert {
         education(to) <- education(from);
     }
 };
+};
 @defineRevProperty(certificates, 'Сертификаты', STRING[1500], leftPane, 20){
-    certificates 'Сертификаты' = DATA STRING[1500] (ExpertRev) CHARWIDTH 20;
-
-    certificates 'Сертификаты' (Expert e) = certificates(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(certificates, 'Сертификаты', STRING[1500], leftPane, 20, base){
+    certificates 'Сертификаты' = DATA STRING[1500] (ExpertRev) CHARWIDTH 20 IN base;
+    
+    certificates 'Сертификаты' (Expert e) = certificates(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (certificates(r) OR certificates(prevRev(r))) AND NOT certificates(r) = certificates(prevRev(r))
@@ -426,11 +480,13 @@ DESIGN expert {
         certificates(to) <- certificates(from);
     }
 };
+};
 
 @defineRevProperty(extraInfo, 'Доп. информация', STRING[1500], leftPane, 20){
-    extraInfo 'Доп. информация' = DATA STRING[1500] (ExpertRev) CHARWIDTH 20;
-
-    extraInfo 'Доп. информация' (Expert e) = extraInfo(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(extraInfo, 'Доп. информация', STRING[1500], leftPane, 20, base){
+    extraInfo 'Доп. информация' = DATA STRING[1500] (ExpertRev) CHARWIDTH 20 IN base;
+    
+    extraInfo 'Доп. информация' (Expert e) = extraInfo(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (extraInfo(r) OR extraInfo(prevRev(r))) AND NOT extraInfo(r) = extraInfo(prevRev(r))
@@ -451,6 +507,7 @@ DESIGN expert {
         extraInfo(to) <- extraInfo(from);
     }
 };
+};
 
 DESIGN expert {
     leftPane {
@@ -461,9 +518,10 @@ DESIGN expert {
 }
 
 @defineRevProperty(revit, 'Revit', BOOLEAN, skills, 4){
-    revit 'Revit' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4;
-
-    revit 'Revit' (Expert e) = revit(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(revit, 'Revit', BOOLEAN, skills, 4, base){
+    revit 'Revit' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4 IN base;
+    
+    revit 'Revit' (Expert e) = revit(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (revit(r) OR revit(prevRev(r))) AND NOT revit(r) = revit(prevRev(r))
@@ -484,10 +542,12 @@ DESIGN expert {
         revit(to) <- revit(from);
     }
 };
+};
 @defineRevProperty(civil, 'Civil', BOOLEAN, skills, 4){
-    civil 'Civil' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4;
-
-    civil 'Civil' (Expert e) = civil(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(civil, 'Civil', BOOLEAN, skills, 4, base){
+    civil 'Civil' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4 IN base;
+    
+    civil 'Civil' (Expert e) = civil(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (civil(r) OR civil(prevRev(r))) AND NOT civil(r) = civil(prevRev(r))
@@ -508,10 +568,12 @@ DESIGN expert {
         civil(to) <- civil(from);
     }
 };
+};
 @defineRevProperty(tekla, 'Tekla', BOOLEAN, skills, 4){
-    tekla 'Tekla' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4;
-
-    tekla 'Tekla' (Expert e) = tekla(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(tekla, 'Tekla', BOOLEAN, skills, 4, base){
+    tekla 'Tekla' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4 IN base;
+    
+    tekla 'Tekla' (Expert e) = tekla(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (tekla(r) OR tekla(prevRev(r))) AND NOT tekla(r) = tekla(prevRev(r))
@@ -532,10 +594,12 @@ DESIGN expert {
         tekla(to) <- tekla(from);
     }
 };
+};
 @defineRevProperty(advanceSteel, 'Advance Steel', BOOLEAN, skills, 4){
-    advanceSteel 'Advance Steel' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4;
-
-    advanceSteel 'Advance Steel' (Expert e) = advanceSteel(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(advanceSteel, 'Advance Steel', BOOLEAN, skills, 4, base){
+    advanceSteel 'Advance Steel' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4 IN base;
+    
+    advanceSteel 'Advance Steel' (Expert e) = advanceSteel(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (advanceSteel(r) OR advanceSteel(prevRev(r))) AND NOT advanceSteel(r) = advanceSteel(prevRev(r))
@@ -556,10 +620,12 @@ DESIGN expert {
         advanceSteel(to) <- advanceSteel(from);
     }
 };
+};
 @defineRevProperty(autoCAD, 'AutoCAD', BOOLEAN, skills, 4){
-    autoCAD 'AutoCAD' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4;
-
-    autoCAD 'AutoCAD' (Expert e) = autoCAD(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(autoCAD, 'AutoCAD', BOOLEAN, skills, 4, base){
+    autoCAD 'AutoCAD' = DATA BOOLEAN (ExpertRev) CHARWIDTH 4 IN base;
+    
+    autoCAD 'AutoCAD' (Expert e) = autoCAD(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (autoCAD(r) OR autoCAD(prevRev(r))) AND NOT autoCAD(r) = autoCAD(prevRev(r))
@@ -580,11 +646,13 @@ DESIGN expert {
         autoCAD(to) <- autoCAD(from);
     }
 };
+};
 
 @defineRevProperty(comments, 'Комментарии', TEXT, leftPane, 30){
-    comments 'Комментарии' = DATA TEXT (ExpertRev) CHARWIDTH 30;
-
-    comments 'Комментарии' (Expert e) = comments(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(comments, 'Комментарии', TEXT, leftPane, 30, base){
+    comments 'Комментарии' = DATA TEXT (ExpertRev) CHARWIDTH 30 IN base;
+    
+    comments 'Комментарии' (Expert e) = comments(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (comments(r) OR comments(prevRev(r))) AND NOT comments(r) = comments(prevRev(r))
@@ -605,6 +673,7 @@ DESIGN expert {
         comments(to) <- comments(from);
     }
 };
+};
 DESIGN expert {
     PROPERTY(comments(r)) { 
         panelCaptionVertical = TRUE;
@@ -616,9 +685,10 @@ DESIGN experts {
 }
 
 @defineRevProperty(description, 'Описание', RICHTEXT, leftPane, 50){
-    description 'Описание' = DATA RICHTEXT (ExpertRev) CHARWIDTH 50;
-
-    description 'Описание' (Expert e) = description(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    @defineRevProperty(description, 'Описание', RICHTEXT, leftPane, 50, base){
+    description 'Описание' = DATA RICHTEXT (ExpertRev) CHARWIDTH 50 IN base;
+    
+    description 'Описание' (Expert e) = description(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (description(r) OR description(prevRev(r))) AND NOT description(r) = description(prevRev(r))
@@ -638,6 +708,7 @@ DESIGN experts {
     copy(ExpertRev from, ExpertRev to) +{
         description(to) <- description(from);
     }
+};
 };
 DESIGN expert {
     tabbedPane {
