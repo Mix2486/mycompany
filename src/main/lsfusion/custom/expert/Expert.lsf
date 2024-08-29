@@ -1,0 +1,203 @@
+MODULE Expert;
+
+REQUIRE MetaNumerator, Time, Authentication;
+
+NAMESPACE Expert;
+
+CLASS Expert 'Специалист';
+
+@defineID(expert, 'Специалисты', '', 4){
+    id '{ID}' = DATA STRING[50] (Expert) IN id CHARWIDTH 4 INDEXED;
+    expert (STRING[50] id) = GROUP AGGR Expert o BY id(o);
+    
+    numeratorExpert = DATA Numerator();
+    nameNumeratorExpert 'Numerator - Специалисты' = name(numeratorExpert());
+    
+    loadDefaultNumerators () + {
+        NEW n = Numerator {
+            name(n) <- 'Специалисты';
+            series(n) <- '';
+            minValue(n) <- 1;
+            maxValue(n) <- 999999;
+            stringLength(n) <- 4;
+            numeratorExpert() <- n;
+        }
+    }
+    
+    EXTEND FORM options 
+        PROPERTIES nameNumeratorExpert()
+    ;
+    
+    DESIGN options {
+        commons {
+            MOVE PROPERTY(nameNumeratorExpert());
+        }
+    }
+    
+    WHEN SETCHANGED(Expert o IS Expert AND numeratorExpert() AND NOT id(o)) DO {
+        id(o) <- CONCAT '', series(numeratorExpert()), curStringValue(numeratorExpert());
+        incrementValueSession(numeratorExpert());   
+    }
+};
+
+CLASS ExpertRev 'Версия карточки специалиста';
+
+expert = DATA Expert (ExpertRev) INDEXED NONULL DELETE;
+
+dateTime 'Время' = DATA DATETIME (ExpertRev);
+dateTime(ExpertRev r) <- currentDateTime() WHEN SET(r IS ExpertRev);
+
+user = DATA User (ExpertRev);
+user(ExpertRev r) <- currentUser() WHEN SET(r IS ExpertRev);
+
+nameUser 'Пользователь' (ExpertRev r) = name(user(r));
+
+number 'Номер' (ExpertRev r) = PARTITION SUM 1 ORDER dateTime(r), r BY expert(r) MATERIALIZED;
+
+approved 'Утверждено' = DATA BOOLEAN (ExpertRev);
+
+readonly = ABSTRACT VALUE BOOLEAN (ExpertRev);
+readonly(ExpertRev v) += approved(v);
+
+toApprove = ABSTRACT VALUE BOOLEAN (Expert);
+
+lastRev (Expert e) = GROUP LAST ExpertRev r ORDER dateTime(r), r BY expert(r) MATERIALIZED;
+lastApprovedRev (Expert e) = GROUP LAST ExpertRev r ORDER dateTime(r), r WHERE approved(r) BY expert(r) MATERIALIZED;
+
+dateTimeLastRev 'Время' (Expert e) = dateTime(lastRev(e));
+nameUserLastRev 'Пользователь' (Expert e) = nameUser(lastRev(e));
+
+approvedLastRev 'Утверждено' (Expert e) = approved(lastRev(e));
+toApprove(Expert e) += e IS Expert AND NOT approved(lastRev(e));
+
+prevRev (ExpertRev r) = PARTITION PREV r ORDER dateTime(r), r BY expert(r);
+nextRev (ExpertRev r) = PARTITION PREV r ORDER DESC dateTime(r), r BY expert(r);
+
+FORM expert 'Специалист'
+    OBJECTS e = Expert PANEL
+    PROPERTIES(e) id
+
+    OBJECTS r = ExpertRev PANEL
+    PROPERTIES next '>' = { SEEK expert.r = nextRev(r); }
+    PROPERTIES prev '<' = { SEEK expert.r = prevRev(r); }
+
+    PROPERTIES(r) READONLY number, dateTime, nameUser
+    PROPERTIES(r) approved
+    FILTERS expert(r) = e
+    
+    EVENTS ON INIT { 
+        IF NOT lastRev(e) THEN NEW nr = ExpertRev {
+            expert(nr) <- e;
+        }
+        SEEK expert.r = lastRev(e); 
+    }
+    
+    EDIT Expert OBJECT e
+;
+
+DESIGN expert {
+    OBJECTS {
+        NEW header {
+            horizontal = TRUE;
+            alignment = STRETCH;
+            
+            NEW actions {
+                horizontal = TRUE;
+                alignment = STRETCH;
+            }
+            NEW headerLeft {
+                horizontal = TRUE;
+                fill = 1;
+                MOVE PROPERTY(id(e)) { flex = 0; };
+            }
+            NEW headerRight {
+                horizontal = TRUE;
+                alignment = STRETCH;
+                MOVE PROPERTY(prev);
+                MOVE PROPERTY(number(r));
+                MOVE PROPERTY(next);
+                MOVE PROPERTY(dateTime(r));
+                MOVE PROPERTY(nameUser(r));
+                MOVE PROPERTY(approved(r));
+            }
+        }
+        NEW pane {
+            horizontal = TRUE;
+            fill = 1;
+            NEW leftPane {
+                fill = 1;
+            }
+            NEW tabbedPane {
+                tabbed = TRUE;
+                fill = 3;
+            }
+        }
+    }
+}
+
+// actions
+copy ABSTRACT LIST (ExpertRev, ExpertRev);
+change 'Изменить' (ExpertRev r) {
+    NEW nr = ExpertRev {
+        expert(nr) <- expert(r);
+        copy(r, nr);
+        SEEK expert.r = nr;
+    }
+}
+
+delete 'Удалить' (ExpertRev r) {
+    SEEK expert.r = lastApprovedRev(expert(r));
+    DELETE r;
+}
+
+approve 'Утвердить' (ExpertRev r) {
+    approved(r) <- TRUE;
+    formOk();
+}
+
+EXTEND FORM expert
+    PROPERTIES(r) change SHOWIF approved(r)
+    PROPERTIES(r) delete SHOWIF NOT approved(r) AND lastApprovedRev(e)
+    PROPERTIES(r) approve SHOWIF NOT approved(r)
+;
+DESIGN expert {
+    actions {
+        MOVE PROPERTY(approve(r));
+        MOVE PROPERTY(change(r));
+        MOVE PROPERTY(delete(r));
+    }
+}
+
+// list
+FORM experts 'Специалисты'
+    OBJECTS e = Expert BACKGROUND RGB(212,212,255) IF toApprove(e) 
+    PROPERTIES(e) READONLY id, dateTimeLastRev, nameUserLastRev
+    
+    PROPERTIES(e) NEWSESSION NEW, EDIT, DELETE 
+
+    FILTERGROUP toApprove
+        FILTER 'Утвердить' toApprove(e)
+    
+    LIST Expert OBJECT e
+;
+
+DESIGN experts {
+    OBJECTS {
+        NEW header { 
+            horizontal = TRUE;
+            alignment = STRETCH;
+            NEW headerLeft { 
+                fill = 1; 
+            }
+            NEW headerRight {
+                alignment = STRETCH;
+                MOVE FILTERGROUP(toApprove);
+            }
+        }
+        MOVE BOX(e) { caption = ''; }
+    }
+}
+
+NAVIGATOR {
+    NEW experts;
+}

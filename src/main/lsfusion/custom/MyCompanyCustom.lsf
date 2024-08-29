@@ -1,5 +1,7 @@
 MODULE MyCompanyCustom;
 
-REQUIRE Eval, ProcessMonitor, Backup,
-        Remote, RemoteImport, RemoteComments;
+REQUIRE Eval, ProcessMonitor, Backup, Icon, Chat,
+        Remote, RemoteImport, RemoteComments,
+        Expert, ExpertCategory, ExpertComments,
+        ExpertProperties, ExpertFile;
         

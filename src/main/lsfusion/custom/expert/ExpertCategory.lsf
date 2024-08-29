@@ -1,0 +1,125 @@
+MODULE ExpertCategory;
+
+REQUIRE Expert, Icon;
+
+NAMESPACE Expert;
+
+CLASS CategoryGroup 'Группа проектной документации';
+TABLE categoryGroup (CategoryGroup);
+
+name '{master.data.name}' = DATA ISTRING[100] (CategoryGroup) CHARWIDTH 15;
+order 'Порядок' = DATA INTEGER (CategoryGroup);
+
+FORM categoryGroup 'Группа проектной документации'
+    OBJECTS o = CategoryGroup PANEL
+    PROPERTIES(o) name, order
+    
+    EDIT CategoryGroup OBJECT o
+;
+
+FORM categoryGroups 'Группы проектной документации'
+    OBJECTS o = CategoryGroup
+    PROPERTIES(o) READONLY name, order
+    PROPERTIES(o) NEWSESSION NEW, EDIT, DELETE
+;
+
+FORM dialogCategoryGroups 'Группы проектной документации'
+    OBJECTS o = CategoryGroup
+    PROPERTIES(o) READONLY name, order
+    ORDERS order(o)
+    
+    LIST CategoryGroup OBJECT o
+;
+
+NAVIGATOR {
+    masterData {
+        NEW categoryGroups;
+    }
+}
+
+CLASS Category 'Раздел проектной документации';
+TABLE category (Category);
+
+name '{master.data.name}' = DATA ISTRING[100] (Category) CHARWIDTH 10;
+
+group = DATA CategoryGroup (Category) INDEXED;
+nameGroup 'Группа' (Category c) = name(group(c));
+
+countCategory (CategoryGroup g) = GROUP SUM 1 IF group(Category c) = g MATERIALIZED;
+
+FORM category 'Раздел проектной документации'
+    OBJECTS c = Category PANEL
+    PROPERTIES(c) name, nameGroup
+    
+    EDIT Category OBJECT c
+;
+
+FORM categories 'Разделы проектной документации'
+    OBJECTS c = Category
+    PROPERTIES(c) READONLY name, nameGroup
+    PROPERTIES(c) NEWSESSION NEW, EDIT, DELETE
+;
+
+FORM dialogCategories 'Разделы проектной документации'
+    OBJECTS c = Category
+    PROPERTIES(c) READONLY name
+    
+    LIST Category OBJECT c
+;
+
+NAVIGATOR {
+    masterData {
+        NEW categories;
+    }
+}
+
+// rev
+
+in 'Вкл' = DATA BOOLEAN (ExpertRev, Category);
+categories 'Разделы ПД' (ExpertRev r) = GROUP CONCAT name(Category c) IF in(r, c), ', ' ORDER name(c), c MATERIALIZED CHARWIDTH 20;
+
+in 'Вкл' (Expert e, Category c) = in((OVERRIDE lastApprovedRev(e), lastRev(e)), c) MATERIALIZED;
+categories 'Разделы ПД' (Expert e) = categories(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+
+count (Expert e, CategoryGroup g) = GROUP SUM 1 IF in(e, Category c) AND group(c) = g MATERIALIZED;
+
+countCategoryGroup (Expert e) = GROUP SUM 1 IF count(e, CategoryGroup g) MATERIALIZED;
+
+countExpert (CategoryGroup g) = GROUP SUM 1 IF count(Expert e, g) MATERIALIZED;
+nameCountExpert (CategoryGroup g) = badged(name(g), countExpert(g));
+
+EXTEND FORM expert
+    PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (categories(r) OR categories(prevRev(r))) AND NOT categories(r) = categories(prevRev(r))
+                  READONLYIF readonly(r)
+                  categories
+;
+        
+DESIGN expert {
+    leftPane {
+        MOVE PROPERTY(categories(r));
+    }
+}
+EXTEND FORM experts
+    PROPERTIES(e) READONLY categories
+;
+    
+copy(ExpertRev from, ExpertRev to) +{
+    in(to, Category c) <- in(from, c);
+}
+
+filterCategoryGroup = DATA LOCAL CategoryGroup ();
+nameFilterCategoryGroup = nameCountExpert(filterCategoryGroup()); 
+
+EXTEND FORM experts
+    PROPERTIES() '' = nameFilterCategoryGroup SELECT 'buttonGroup'
+    
+    FILTERS count(e, filterCategoryGroup()) OR
+            (NOT countCategoryGroup(e) AND NOT countCategory(filterCategoryGroup()))
+            OR NOT filterCategoryGroup()
+;
+
+DESIGN experts {
+    headerLeft {
+        MOVE PROPERTY(nameFilterCategoryGroup()) { fill = 0; };
+    }
+}

@@ -1,0 +1,92 @@
+MODULE ExpertComments;
+
+REQUIRE Expert, Icon, Time;
+
+NAMESPACE Expert;
+
+CLASS ExpertComment 'Комментарий';
+
+expert = DATA Expert (ExpertComment) NONULL DELETE;
+countComment (Expert e) = GROUP SUM 1 IF expert(ExpertComment c) = e MATERIALIZED;
+
+dateTime 'Date' = DATA DATETIME (ExpertComment);
+dateTime(ExpertComment f) <- currentDateTime() WHEN SET(f IS ExpertComment);
+
+user = DATA User (ExpertComment);
+nameUser 'User' (ExpertComment f) = name(user(f));
+user(ExpertComment f) <- currentUser() WHEN SET(f IS ExpertComment);
+
+creationInfo (ExpertComment c) = HTML ('<div>' + (CONCAT '<br>', '<font size="-2">' + dateTime(c) + '</font>', '<b>' + nameUser(c) + '</b>') + '</div>');
+
+text 'Текст' = DATA TEXT (ExpertComment);
+
+approved 'Утвержден' = DATA BOOLEAN (ExpertComment);
+
+countNotApprovedComment = GROUP SUM 1 IF ExpertComment c IS ExpertComment AND NOT approved(c) BY expert(c) MATERIALIZED ;
+toApprove (Expert e) += TRUE IF countNotApprovedComment(e); 
+
+approve 'Утвердить' (ExpertComment c) {
+    approved(c) <- TRUE;
+}
+
+EXTEND FORM expert
+    OBJECTS c = ExpertComment LAST BACKGROUND RGB(212,212,255) IF NOT approved(c)
+    PROPERTIES(c) READONLYIF approved(c) text ON CHANGE {
+        INPUT t = text(c) CHANGE DO { 
+            IF NOT t THEN DELETE c;
+        }
+    }
+    PROPERTIES(c) 'Добавлен' = creationInfo
+    PROPERTIES(c) approve GRID DISABLEIF approved(c)
+    PROPERTIES(c) DELETE
+    FILTERS expert(c) = e
+;
+
+inputComment '' = DATA LOCAL NESTED TEXT ();
+
+newComment 'Добавить' (Expert e) {
+    IF inputComment() THEN
+        NEW nc = ExpertComment {
+            expert(nc) <- e;
+            text(nc) <- inputComment();
+            inputComment() <- NULL;
+        }
+}
+
+EXTEND FORM expert
+    PROPERTIES inputComment(), newComment(e)
+;
+
+DESIGN expert {
+    tabbedPane {
+        NEW comments {
+            caption = badged('Комментарии', countComment(e));
+            MOVE BOX(c) {
+                GRID(c) {
+                    height = 100;
+                }
+                caption = '';
+                PROPERTY(text(c)) {
+                    valueHeight = -1;
+                }
+                PROPERTY(creationInfo(c)) {
+                    valueHeight = -1;
+                    valueWidth = 20;
+                }
+            }
+            NEW inputComment {
+                horizontal = TRUE;
+                alignment = STRETCH;
+                MOVE PROPERTY(inputComment()) {
+                    height = 150;
+                    fill = 3;
+                }
+                MOVE PROPERTY(newComment(e)) {
+                    fill = 1;
+                } 
+            }
+        }
+    }
+}
+
+

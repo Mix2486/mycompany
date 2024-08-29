@@ -1,0 +1,193 @@
+MODULE ExpertFile;
+
+REQUIRE Expert, Icon, Utils;
+
+NAMESPACE Expert;
+
+CLASS ExpertFile 'Файл специалиста';
+
+expertRev = DATA ExpertRev (ExpertFile) INDEXED NONULL DELETE;
+expert (ExpertFile f) = expert(expertRev(f)) MATERIALIZED INDEXED;
+
+file = DATA RAWFILE (ExpertFile);
+hasFile (ExpertFile f) = TRUE IF file(f) MATERIALIZED;
+
+// type
+@defineNamedObject(expertFileType, 'Тип файла специалиста'){
+    
+    CLASS ExpertFileType 'Тип файла специалиста';
+    TABLE expertFileType (ExpertFileType);
+    
+    name '{master.data.name}' = DATA ISTRING[100] (ExpertFileType) CHARWIDTH 15;
+    
+    FORM expertFileType 'Тип файла специалиста'
+        OBJECTS o = ExpertFileType PANEL
+        PROPERTIES(o) name
+        
+        EDIT ExpertFileType OBJECT o
+    ;
+    
+    FORM expertFileTypes 'Тип файла специалиста'
+        OBJECTS o = ExpertFileType
+        PROPERTIES(o) READONLY name
+        PROPERTIES(o) NEWSESSION NEW, EDIT, DELETE
+    ;
+    
+    FORM dialogExpertFileTypes 'Тип файла специалиста'
+        OBJECTS o = ExpertFileType
+        PROPERTIES(o) READONLY name
+        
+        LIST ExpertFileType OBJECT o
+    ;
+    
+    NAVIGATOR {
+        masterData {
+            NEW expertFileTypes;
+        }
+    }
+
+};
+
+type 'Тип' = DATA ExpertFileType (ExpertFile);
+nameType 'Тип' (ExpertFile f) = name(type(f));
+
+name '{Name}' = DATA ISTRING (ExpertFile) CHARWIDTH 15;
+extension 'Extension' = DATA ISTRING (ExpertFile) CHARWIDTH 5;
+nameExtension (ExpertFile f) = CONCAT '.', name(f), extension(f);
+
+description 'Description' = DATA ISTRING (ExpertFile) CHARWIDTH 30;
+
+dateTime 'Date' = DATA DATETIME (ExpertFile);
+dateTime(ExpertFile f) <- currentDateTime() WHEN SET(f IS ExpertFile);
+
+user = DATA User (ExpertFile);
+nameUser 'User' (ExpertFile f) = name(user(f));
+user(ExpertFile f) <- currentUser() WHEN SET(f IS ExpertFile);
+
+open 'Open' (ExpertFile f) { open(file(f), nameExtension(f)); } IMAGE 'open.png';
+
+countFiles 'Files' (ExpertRev i) = GROUP SUM 1 IF expertRev(ExpertFile f) = i;
+
+index '{Index}' (ExpertFile f) = PARTITION SUM 1 ORDER f BY expertRev(f) MATERIALIZED;
+
+// history
+initial = DATA ExpertFile (ExpertFile) INDEXED;
+initialFile (ExpertFile f) = OVERRIDE initial(f), f AS ExpertFile MATERIALIZED INDEXED;
+prevFile (ExpertFile f) = PARTITION PREV f ORDER dateTime(f), f BY initialFile(f);
+nextFile (ExpertFile f) = PARTITION PREV f ORDER DESC dateTime(f), f BY initialFile(f);
+
+lastFile (ExpertFile f) = GROUP LAST file (ExpertFile lf) ORDER dateTime(lf), lf 
+                                        WHERE initialFile(lf) = initialFile(f) AND hasFile(lf) AND
+                                              (dateTime(lf) < dateTime(f) OR (dateTime(lf) = dateTime(f) AND lf <= f));
+openLast 'Open' (ExpertFile f) { open(lastFile(f), nameExtension(f)); } IMAGE 'open.png';
+
+copy (ExpertRev from, ExpertRev to) +{
+    FOR expertRev(ExpertFile fromF) = from DO NEW toF = ExpertFile {
+        expertRev(toF) <- to;
+        initial(toF) <- initialFile(fromF);
+        
+        type(toF) <- type(fromF);
+        
+        name(toF) <- name(fromF);
+        extension(toF) <- extension(fromF);
+        description(toF) <- description(fromF);
+    }
+}
+
+
+replace 'Заменить' (ExpertFile r) {
+    INPUT uf = NAMEDFILE DO {
+        file(r) <- RAWFILE(uf);
+        name(r) <- name(uf);
+        extension(r) <- extension(uf);
+    }
+} IMAGE 'load.png';
+
+newFile 'File' (ExpertRev r) {
+    INPUT uf = NAMEDFILE DO NEW uof = ExpertFile {
+        expertRev(uof) <- r;
+        file(uof) <- RAWFILE(uf);
+        name(uof) <- name(uf);
+        extension(uof) <- extension(uf);
+    }
+} IMAGE 'add.png' CHANGEKEY 'INSERT' HIDE;
+
+backgroundRow (ExpertRev r, ExpertFile f) = IF NOT initial(f) THEN RGB(212,255,212) ELSE
+                                                     IF expertRev(f) != r THEN RGB(255,212,212);
+
+EXTEND FORM expert
+    OBJECTS ef = ExpertFile
+    PROPERTIES(ef) READONLY BACKGROUND backgroundRow(r, ef) index
+    PROPERTIES(ef) READONLYIF readonly(r)
+                        nameType BACKGROUND (OVERRIDE backgroundRow(r, ef), RGB(212,212,255) IF (type(ef) OR type(prevFile(ef))) AND NOT type(prevFile(ef)) = type(ef)), 
+                        name BACKGROUND (OVERRIDE backgroundRow(r, ef), RGB(212,212,255) IF (name(ef) OR name(prevFile(ef))) AND NOT name(prevFile(ef)) = name(ef)), 
+                        extension BACKGROUND (OVERRIDE backgroundRow(r, ef), RGB(212,212,255) IF (extension(ef) OR extension(prevFile(ef))) AND NOT extension(prevFile(ef)) = extension(ef)), 
+                        description BACKGROUND (OVERRIDE backgroundRow(r, ef), RGB(212,212,255) IF (description(ef) OR description(prevFile(ef))) AND NOT description(prevFile(ef)) = description(ef))
+    PROPERTIES(ef) READONLY BACKGROUND backgroundRow(r, ef) nameUser, dateTime
+    PROPERTIES(ef) GRID BACKGROUND (OVERRIDE backgroundRow(r, ef), RGB(212,212,255) IF hasFile(ef))
+                        openLast,
+                        replace SHOWIF NOT readonly(r),
+                        DELETE SHOWIF NOT readonly(r)
+    FILTERS expertRev(ef) = r OR
+            (expertRev(ef) = prevRev(r) AND NOT expertRev(nextFile(ef)) = r AND NOT approved(r))
+
+    PROPERTIES(r) newFile DRAW ef TOOLBAR READONLYIF readonly(r)
+    PROPERTIES inputFile = '' CUSTOM 'inputFile' ON CHANGE {
+        INPUT f = JSON DO
+            IMPORT JSON FROM f FIELDS() STRING name, STRING extension, STRING data DO 
+                IF NOT readonly(r) THEN NEW uof = ExpertFile {
+                    expertRev(uof) <- r;
+                    file(uof) <- decode(data, 'base64');
+                    name(uof) <- name;
+                    extension(uof) <- extension;
+                }
+    }
+;
+
+DESIGN expert {
+    tabbedPane {
+        NEW files {
+            caption = badged('Files', countFiles(r));
+            MOVE BOX(ef) { 
+                caption = '';
+                GRID(ef) { height = 100; }
+            }
+            MOVE PROPERTY(inputFile);
+        }
+    }
+}
+
+// preview
+
+previewPdfFile = DATA LOCAL NESTED PDFFILE();
+previewImageFile = DATA LOCAL NESTED PDFFILE();
+
+EXTEND FORM expert
+    PROPERTIES() previewPdfFile SHOWIF previewPdfFile(), previewImageFile SHOWIF previewImageFile()
+    
+    EVENTS ON CHANGE ef {
+        IF lower(extension(ef)) = 'jpg' OR lower(extension(ef)) = 'jpeg' OR lower(extension(ef)) = 'png' OR lower(extension(ef)) = 'bmp' THEN {
+            previewPdfFile() <- NULL;
+            previewImageFile() <- IMAGEFILE(lastFile(ef));
+        }
+        IF lower(extension(ef)) = 'pdf' THEN {
+            previewPdfFile() <- PDFFILE(lastFile(ef));
+            previewImageFile() <- NULL;
+        }
+        IF lower(extension(ef)) = 'doc' OR lower(extension(ef)) = 'docx' THEN {
+            wordToPdf(lastFile(ef));
+            previewPdfFile() <- exportPdfFile();
+            previewImageFile() <- NULL;
+        }
+    }   
+;
+
+DESIGN expert {
+    files {
+        NEW preview {
+            fill = 10;
+            MOVE PROPERTY(previewPdfFile()) { fill = 1; size = (100, 100); caption = ''; }
+            MOVE PROPERTY(previewImageFile()) { fill = 1; size = (100, 100); caption = ''; }
+        }
+    }
+}
