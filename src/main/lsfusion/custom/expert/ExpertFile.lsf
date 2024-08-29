@@ -160,7 +160,7 @@ DESIGN expert {
 // preview
 
 previewPdfFile = DATA LOCAL NESTED PDFFILE();
-previewImageFile = DATA LOCAL NESTED PDFFILE();
+previewImageFile = DATA LOCAL NESTED IMAGEFILE();
 
 EXTEND FORM expert
     PROPERTIES() previewPdfFile SHOWIF previewPdfFile(), previewImageFile SHOWIF previewImageFile()
