@@ -114,7 +114,7 @@ DESIGN expert {
 };
 
 @defineRevProperty(phone, 'Телефон', STRING[20], contactInfo, 15){
-    phone 'Телефон' = DATA STRING[15] (ExpertRev) CHARWIDTH 15;
+    phone 'Телефон' = DATA STRING[20] (ExpertRev) CHARWIDTH 15;
 
     phone 'Телефон' (Expert e) = phone(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
 
@@ -138,7 +138,7 @@ DESIGN expert {
     }
 };
 @defineRevProperty(extraPhone, 'Телефон (доп.)', STRING[20], contactInfo, 15){
-    extraPhone 'Телефон (доп.)' = DATA STRING[15] (ExpertRev) CHARWIDTH 15;
+    extraPhone 'Телефон (доп.)' = DATA STRING[20] (ExpertRev) CHARWIDTH 15;
 
     extraPhone 'Телефон (доп.)' (Expert e) = extraPhone(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
 
@@ -200,8 +200,8 @@ DESIGN expert {
     }
 };
 
-@defineRevProperty(linkedIn, 'LinkedIn', STRING[200], contactInfo, 25){
-    linkedIn 'LinkedIn' = DATA STRING[200] (ExpertRev) CHARWIDTH 25;
+@defineRevProperty(linkedIn, 'LinkedIn', LINK, contactInfo, 25){
+    linkedIn 'LinkedIn' = DATA LINK (ExpertRev) CHARWIDTH 25;
 
     linkedIn 'LinkedIn' (Expert e) = linkedIn(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
 
@@ -428,9 +428,9 @@ DESIGN expert {
 };
 
 @defineRevProperty(extraInfo, 'Доп. информация', STRING[1500], leftPane, 20){
-    extraInfo 'Дополнительная информация' = DATA STRING[1500] (ExpertRev) CHARWIDTH 20;
+    extraInfo 'Доп. информация' = DATA STRING[1500] (ExpertRev) CHARWIDTH 20;
 
-    extraInfo 'Дополнительная информация' (Expert e) = extraInfo(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
+    extraInfo 'Доп. информация' (Expert e) = extraInfo(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED;
 
     EXTEND FORM expert
         PROPERTIES(r) BACKGROUND RGB(212,212,255) IF (extraInfo(r) OR extraInfo(prevRev(r))) AND NOT extraInfo(r) = extraInfo(prevRev(r))
