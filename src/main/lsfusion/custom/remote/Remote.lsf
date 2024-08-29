@@ -1,6 +1,6 @@
 MODULE Remote;
 
-REQUIRE Utils, Authentication, Time, ExpertProperties, ExpertCategory;
+REQUIRE Utils, Authentication, Time;
 
 CLASS Remote 'Инженеры';
 
@@ -114,50 +114,5 @@ DESIGN viewEngineers {
 NAVIGATOR {
     NEW FOLDER move 'Сотрудники' WINDOW toolbar FIRST { // Новый пункт горизонтального меню
         NEW FORM viewEngineers; // В качестве подпункта меню Заголовок формы
-    }
-}
-
-migrateExperts () {
-    NEWSESSION {
-        FOR Remote r AS Remote DO NEW e = Expert {
-            NEW er = ExpertRev {
-                expert(er) <- e;
-
-                name(er) <- name(r);
-                birthday(er) <- birth_date(r);
-                company(er) <- company(r);
-                address(er) <- address(r);
-                phone(er) <- phone(r);
-                extraPhone(er) <- phone_2(r);
-
-                mail(er) <- mail(r);
-                linkedIn(er) <- linkedIn(r);
-
-                specialization(er) <- specialization(r);
-                education(er) <- education(r);
-                certificates(er) <- certificates(r);
-                extraInfo(er) <- additional_information(r);
-                comments(er) <- comments(r);
-
-                experience(er) <- experience(r);
-
-                individualEntrepreneur(er) <- individual_entrepreneur(r);
-                blackList(er) <- black_list(r);
-                revit(er) <- revit(r);
-                civil(er) <- civil(r);
-                tekla(er) <- tekla(r);
-                advanceSteel(er) <- advance_steel(r);
-                autoCAD(er) <- autoCAD(r);
-                available(er) <- available(r);
-
-                FOR iterate(INTEGER i, 1, wordCount(project_doc(r), ',')) AND STRING cat = trim(getWord(project_doc(r), ',', i)) DO {
-                    IF NOT category(cat) THEN NEW c = Category {
-                        name(c) <- cat;
-                    }
-                    in(er, category(cat)) <- TRUE;
-                }
-            }
-        }
-        APPLY;
     }
 }

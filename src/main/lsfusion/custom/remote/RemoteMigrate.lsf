@@ -1,0 +1,54 @@
+MODULE RemoteMigrate;
+
+REQUIRE Remote, ExpertProperties, ExpertCategory;
+
+NAMESPACE Remote;
+
+migrateExperts () {
+    NEWSESSION {
+        FOR Remote r AS Remote DO NEW e = Expert {
+            NEW er = ExpertRev {
+                expert(er) <- e;
+
+                name(er) <- name(r);
+                birthday(er) <- birth_date(r);
+                company(er) <- company(r);
+                address(er) <- address(r);
+                phone(er) <- IF length(phone(r)) = 12 THEN '+' + substr(phone(r), 1, 3) + ' ' + substr(phone(r), 4, 2) + ' ' + substr(phone(r), 6, 3) + ' ' + substr(phone(r), 9, 2) + ' ' + substr(phone(r), 11, 2) ELSE
+                    left(phone(r), 20);
+                extraPhone(er) <- IF length(phone_2(r)) = 12 THEN '+' + substr(phone_2(r), 1, 3) + ' ' + substr(phone_2(r), 4, 2) + ' ' + substr(phone_2(r), 6, 3) + ' ' + substr(phone_2(r), 9, 2) + ' ' + substr(phone_2(r), 11, 2) ELSE
+                    left(phone_2(r), 20);
+
+                mail(er) <- left(mail(r), 60);
+                linkedIn(er) <- linkedIn(r);
+
+                specialization(er) <- specialization(r);
+                education(er) <- education(r);
+                certificates(er) <- certificates(r);
+                extraInfo(er) <- additional_information(r);
+                comments(er) <- comments(r);
+
+                experience(er) <- experience(r);
+
+                individualEntrepreneur(er) <- individual_entrepreneur(r);
+                blackList(er) <- black_list(r);
+                revit(er) <- revit(r);
+                civil(er) <- civil(r);
+                tekla(er) <- tekla(r);
+                advanceSteel(er) <- advance_steel(r);
+                autoCAD(er) <- autoCAD(r);
+                available(er) <- available(r);
+
+                FOR iterate(INTEGER i, 1, wordCount(project_doc(r), ',')) AND STRING cat = trim(getWord(project_doc(r), ',', i)) DO {
+                    IF NOT category(cat) THEN NEW c = Category {
+                        name(c) <- cat;
+                    }
+                    in(er, category(cat)) <- TRUE;
+                }
+
+                approved(er) <- TRUE;
+            }
+        }
+        APPLY;
+    }
+}
