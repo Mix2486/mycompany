@@ -16,11 +16,12 @@ user = DATA User (ExpertComment);
 nameUser 'User' (ExpertComment f) = name(user(f));
 user(ExpertComment f) <- currentUser() WHEN SET(f IS ExpertComment);
 
-creationInfo (ExpertComment c) = HTML ('<div>' + (CONCAT '<br>', '<font size="-2">' + dateTime(c) + '</font>', '<b>' + nameUser(c) + '</b>') + '</div>');
+creationHtml (ExpertComment c) = CONCAT '<br>', '<font size="-2">' + dateTime(c) + '</font>', '<b>' + nameUser(c) + '</b>';
+creationInfo (ExpertComment c) = HTML ('<div>' + creationHtml(c) + '</div>');
 
 text 'Текст' = DATA TEXT (ExpertComment);
 
-message 'Текст' (ExpertComment c) = HTML(CONCAT '<br>', creationInfo(c), HTML ('<div>' + escapeXMLValue(text(c)) + '</div>')); 
+message 'Текст' (ExpertComment c) = HTML ('<div>' + (CONCAT '<br>', creationHtml(c), escapeXMLValue(text(c))) + '</div>'); 
 
 approved 'Утвержден' = DATA BOOLEAN (ExpertComment);
 
