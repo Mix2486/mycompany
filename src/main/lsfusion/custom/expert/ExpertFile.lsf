@@ -191,3 +191,28 @@ DESIGN expert {
         }
     }
 }
+
+// experts
+
+expertFile (ExpertRev r, ExpertFileType t) = GROUP MAX ExpertFile f IF expertRev(f) = r AND type(f) = t;
+expertFile (Expert e, ExpertFileType t) = expertFile(lastApprovedRev(e), t) MATERIALIZED;
+file (Expert e, ExpertFileType t) = lastFile(expertFile(e, t));
+openFile 'Open' (Expert e, ExpertFileType t) { open(file(e, t), nameExtension(expertFile(e, t))); } IMAGE 'open.png';
+
+filterFileType = DATA LOCAL NESTED ExpertFileType ();
+nameFilterFileType 'Файл' () = name(filterFileType());
+
+EXTEND FORM experts
+    OBJECTS eft = ExpertFileType BEFORE e
+    
+    PROPERTIES(e, eft) openFile GRID DISABLEIF NOT expertFile(e, eft) COLUMNS (eft) HEADER name(eft)
+    
+    PROPERTIES '' = nameFilterFileType() SELECT 'buttonGroup'
+    FILTERS expertFile(e, filterFileType()) OR NOT filterFileType()
+;
+
+DESIGN experts {
+    headerLeft {
+        MOVE PROPERTY(nameFilterFileType()) { fill = 0; }
+    }
+}

@@ -188,7 +188,8 @@ DESIGN experts {
             horizontal = TRUE;
             alignment = STRETCH;
             NEW headerLeft { 
-                fill = 1; 
+                fill = 1;
+                horizontal = TRUE;
             }
             NEW headerRight {
                 alignment = STRETCH;
