@@ -20,6 +20,8 @@ creationInfo (ExpertComment c) = HTML ('<div>' + (CONCAT '<br>', '<font size="-2
 
 text 'Текст' = DATA TEXT (ExpertComment);
 
+message 'Текст' (ExpertComment c) = HTML(CONCAT '', creationInfo(c), HTML ('<div>' + escapeXMLValue(text(c)) + '</div>')); 
+
 approved 'Утвержден' = DATA BOOLEAN (ExpertComment);
 
 countNotApprovedComment = GROUP SUM 1 IF ExpertComment c IS ExpertComment AND NOT approved(c) BY expert(c) MATERIALIZED ;
@@ -89,4 +91,19 @@ DESIGN expert {
     }
 }
 
+EXTEND FORM experts
+    OBJECTS ec = ExpertComment
+    PROPERTIES(ec) READONLY '' = message
+    
+    FILTERS expert(ec) = e
+;
 
+DESIGN experts {
+    pane {
+        MOVE BOX(ec) { 
+            caption = '';
+            fill = 0.2;
+            width = 1;
+        }
+    }
+}

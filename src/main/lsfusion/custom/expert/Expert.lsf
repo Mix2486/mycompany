@@ -195,7 +195,11 @@ DESIGN experts {
                 MOVE FILTERGROUP(toApprove);
             }
         }
-        MOVE BOX(e) { caption = ''; }
+        NEW pane {
+            fill = 1;
+            horizontal = TRUE;
+            MOVE BOX(e) { caption = ''; }
+        }
     }
 }
 
