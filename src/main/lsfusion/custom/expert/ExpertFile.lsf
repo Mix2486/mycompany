@@ -112,7 +112,7 @@ newFile 'File' (ExpertRev r) {
     }
 } IMAGE 'add.png' CHANGEKEY 'INSERT' HIDE;
 
-backgroundRow (ExpertRev r, ExpertFile f) = IF NOT initial(f) THEN RGB(212,255,212) ELSE
+backgroundRow (ExpertRev r, ExpertFile f) = IF expertRev(f) = r AND NOT initial(f) THEN RGB(212,255,212) ELSE
                                                      IF expertRev(f) != r THEN RGB(255,212,212);
 
 EXTEND FORM expert
