@@ -237,9 +237,9 @@ DESIGN expert {
 };
 };
 
-@defineRevProperty(linkedIn, 'LinkedIn', LINK, contactInfo, 25){
-    @defineRevProperty(linkedIn, 'LinkedIn', LINK, contactInfo, 25, base){
-    linkedIn 'LinkedIn' = DATA LINK (ExpertRev) CHARWIDTH 25 IN base;
+@defineRevProperty(linkedIn, 'LinkedIn', STRING, contactInfo, 25){
+    @defineRevProperty(linkedIn, 'LinkedIn', STRING, contactInfo, 25, base){
+    linkedIn 'LinkedIn' = DATA STRING (ExpertRev) CHARWIDTH 25 IN base;
     
     linkedIn 'LinkedIn' (Expert e) = linkedIn(OVERRIDE lastApprovedRev(e), lastRev(e)) MATERIALIZED IN base;
 
@@ -263,6 +263,14 @@ DESIGN expert {
     }
 };
 };
+
+linkedInLink 'LinkedIn' (Expert e) = LINK (linkedIn(e));
+EXTEND FORM experts
+    PROPERTIES(e) READONLY linkedInLink
+;
+DESIGN experts {
+    PROPERTY(linkedIn(e)) { hide = TRUE; }
+}
 
 DESIGN expert {
     leftPane { 

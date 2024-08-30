@@ -20,7 +20,7 @@ migrateExperts () {
                     left(phone_2(r), 20);
 
                 mail(er) <- left(mail(r), 60);
-                linkedIn(er) <- linkedIn(r);
+                linkedIn(er) <- STRING(linkedIn(r));
 
                 specialization(er) <- specialization(r);
                 education(er) <- education(r);
