@@ -20,7 +20,7 @@ creationInfo (ExpertComment c) = HTML ('<div>' + (CONCAT '<br>', '<font size="-2
 
 text 'Текст' = DATA TEXT (ExpertComment);
 
-message 'Текст' (ExpertComment c) = HTML(CONCAT '', creationInfo(c), HTML ('<div>' + escapeXMLValue(text(c)) + '</div>')); 
+message 'Текст' (ExpertComment c) = HTML(CONCAT '<br>', creationInfo(c), HTML ('<div>' + escapeXMLValue(text(c)) + '</div>')); 
 
 approved 'Утвержден' = DATA BOOLEAN (ExpertComment);
 
