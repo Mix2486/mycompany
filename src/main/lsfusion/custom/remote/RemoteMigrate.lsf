@@ -1,6 +1,6 @@
 MODULE RemoteMigrate;
 
-REQUIRE Remote, ExpertProperties, ExpertCategory, ExpertComments;
+REQUIRE Remote, ExpertProperties, ExpertCategory, ExpertComments, ExpertFile;
 
 NAMESPACE Remote;
 
@@ -42,6 +42,18 @@ migrateExperts () {
             advanceSteel(er) <- TRUE IF advance_steel(r);
             autoCAD(er) <- TRUE IF autoCAD(r);
             available(er) <- TRUE IF available(r);
+            
+            IF NOT expertFileType('Портфолио') THEN NEW t = ExpertFileType {
+                name(t) <- 'Портфолио';
+            }
+            
+            IF portfolio(r) THEN NEW ef = ExpertFile {
+                expertRev(ef) <- er;
+                type(ef) <- expertFileType('Портфолио');
+                name(ef) <- 'Портфолио';
+                extension(ef) <- extension(portfolio(r));
+                file(ef) <- RAWFILE(portfolio(r));
+            }
 
             FOR iterate(INTEGER i, 1, wordCount(project_doc(r), ',')) AND STRING cat = trim(getWord(project_doc(r), ',', i)) DO {
                 IF NOT category(cat) THEN NEW c = Category {

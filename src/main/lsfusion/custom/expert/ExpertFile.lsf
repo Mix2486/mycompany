@@ -47,6 +47,7 @@ hasFile (ExpertFile f) = TRUE IF file(f) MATERIALIZED;
     }
 
 };
+expertFileType (ISTRING[100] name) = GROUP AGGR ExpertFileType t BY name(t);
 
 type 'Тип' = DATA ExpertFileType (ExpertFile);
 nameType 'Тип' (ExpertFile f) = name(type(f));
