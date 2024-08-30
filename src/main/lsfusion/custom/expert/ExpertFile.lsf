@@ -176,7 +176,9 @@ EXTEND FORM expert
             previewImageFile() <- NULL;
         }
         IF lower(extension(ef)) = 'doc' OR lower(extension(ef)) = 'docx' THEN {
-            wordToPdf(lastFile(ef));
+            TRY {
+                wordToPdf(lastFile(ef));
+            } CATCH {}
             previewPdfFile() <- exportPdfFile();
             previewImageFile() <- NULL;
         }
