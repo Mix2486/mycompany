@@ -164,7 +164,7 @@ previewPdfFile = DATA LOCAL NESTED PDFFILE();
 previewImageFile = DATA LOCAL NESTED IMAGEFILE();
 
 EXTEND FORM expert
-    PROPERTIES() previewPdfFile SHOWIF previewPdfFile(), previewImageFile SHOWIF previewImageFile()
+    PROPERTIES() READONLY previewPdfFile SHOWIF previewPdfFile(), previewImageFile SHOWIF previewImageFile()
     
     EVENTS ON CHANGE ef {
         IF lower(extension(ef)) = 'jpg' OR lower(extension(ef)) = 'jpeg' OR lower(extension(ef)) = 'png' OR lower(extension(ef)) = 'bmp' THEN {
