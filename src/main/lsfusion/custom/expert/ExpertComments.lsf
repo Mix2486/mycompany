@@ -8,9 +8,11 @@ CLASS ExpertComment 'Комментарий';
 
 expert = DATA Expert (ExpertComment) NONULL DELETE;
 countComment (Expert e) = GROUP SUM 1 IF expert(ExpertComment c) = e MATERIALIZED;
+lastComment (Expert e) = GROUP LAST ExpertComment c ORDER c BY expert(c) MATERIALIZED;
 
 dateTime 'Date' = DATA DATETIME (ExpertComment);
 dateTime(ExpertComment f) <- currentDateTime() WHEN SET(f IS ExpertComment);
+date 'Дата' (ExpertComment c) = DATE(dateTime(c));
 
 user = DATA User (ExpertComment);
 nameUser 'User' (ExpertComment f) = name(user(f));
@@ -21,7 +23,13 @@ creationInfo (ExpertComment c) = HTML ('<div>' + creationHtml(c) + '</div>');
 
 text 'Текст' = DATA TEXT (ExpertComment);
 
-message 'Текст' (ExpertComment c) = HTML ('<div>' + (CONCAT '<br>', creationHtml(c), escapeXMLValue(text(c))) + '</div>'); 
+message 'Текст' (ExpertComment c) = HTML ('<div>' + (CONCAT '<br>', creationHtml(c), escapeXMLValue(text(c))) + '</div>');
+
+textLastComment 'Последний комментарий' (Expert e) = text(lastComment(e));
+
+stringLastComment 'Последний комментарий' (Expert e) = STRING(textLastComment(e));
+dateLastComment 'Дата комментарий' (Expert e) = date(lastComment(e));
+
 
 approved 'Утвержден' = DATA BOOLEAN (ExpertComment);
 
@@ -93,6 +101,8 @@ DESIGN expert {
 }
 
 EXTEND FORM experts
+    PROPERTIES(e) READONLY LAST dateLastComment, stringLastComment
+    
     OBJECTS ec = ExpertComment
     PROPERTIES(ec) READONLY '' = message
     
